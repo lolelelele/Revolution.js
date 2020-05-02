@@ -39,33 +39,57 @@ function GetInputMode() {
   return IsInputDisabled(2) && "MouseAndKeyboard" || "GamePad"
 }
 
+// KeyboardInput
+async function KeyboardInput(TextEntry, ExampleText, MaxStringLength) {
+  AddTextEntry("FMMC_KEY_TIP1", TextEntry + ":")
+  DisplayOnscreenKeyboard(1, "FMMC_KEY_TIP1", "", ExampleText, "", "", "", MaxStringLength)
+  while (UpdateOnscreenKeyboard() == 0){
+    DisableAllControlActions(0)
+    if (IsDisabledControlPressed(0, 322)) return ""
+    await Delay(5)
+  }
+  if (GetOnscreenKeyboardResult()){
+    var result = GetOnscreenKeyboardResult()
+    return result
+  }
+}
+
 //###################\\
 // On / Off
 //###################\\
+var Visibility            = true
 var Godmode               = false
 var Superjump             = false
-var Visibility            = true
 var InfinityStamina       = false
 var ThermalVision         = false
 var FastRun               = false
-var Noclip                = Noclip
-
+var Noclip                = false
+var SelectedPlayer        = null
+var Spectate              = false
+var rapidFire             = false
+var norecoil              = false
+var superGrip             = false
+var infammo               = false
 //###################\\
 // Settings
 //###################\\
 var items = [ 'Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5' ]
 var currentItemIndex = 1
 var selectedItemIndex = 1
+var allWeapons=["WEAPON_KNIFE","WEAPON_KNUCKLE","WEAPON_NIGHTSTICK","WEAPON_HAMMER","WEAPON_BAT","WEAPON_GOLFCLUB","WEAPON_CROWBAR","WEAPON_BOTTLE","WEAPON_DAGGER","WEAPON_HATCHET","WEAPON_MACHETE","WEAPON_FLASHLIGHT","WEAPON_SWITCHBLADE","WEAPON_PISTOL","WEAPON_PISTOL_MK2","WEAPON_COMBATPISTOL","WEAPON_APPISTOL","WEAPON_PISTOL50","WEAPON_SNSPISTOL","WEAPON_HEAVYPISTOL","WEAPON_VINTAGEPISTOL","WEAPON_STUNGUN","WEAPON_FLAREGUN","WEAPON_MARKSMANPISTOL","WEAPON_REVOLVER","WEAPON_MICROSMG","WEAPON_SMG","WEAPON_SMG_MK2","WEAPON_ASSAULTSMG","WEAPON_MG","WEAPON_COMBATMG","WEAPON_COMBATMG_MK2","WEAPON_COMBATPDW","WEAPON_GUSENBERG","WEAPON_MACHINEPISTOL","WEAPON_ASSAULTRIFLE","WEAPON_ASSAULTRIFLE_MK2","WEAPON_CARBINERIFLE","WEAPON_CARBINERIFLE_MK2","WEAPON_ADVANCEDRIFLE","WEAPON_SPECIALCARBINE","WEAPON_BULLPUPRIFLE","WEAPON_COMPACTRIFLE","WEAPON_PUMPSHOTGUN","WEAPON_SAWNOFFSHOTGUN","WEAPON_BULLPUPSHOTGUN","WEAPON_ASSAULTSHOTGUN","WEAPON_MUSKET","WEAPON_HEAVYSHOTGUN","WEAPON_DBSHOTGUN","WEAPON_SNIPERRIFLE","WEAPON_HEAVYSNIPER","WEAPON_HEAVYSNIPER_MK2","WEAPON_MARKSMANRIFLE","WEAPON_GRENADELAUNCHER","WEAPON_GRENADELAUNCHER_SMOKE","WEAPON_RPG","WEAPON_STINGER","WEAPON_FIREWORK","WEAPON_HOMINGLAUNCHER","WEAPON_GRENADE","WEAPON_STICKYBOMB","WEAPON_PROXMINE","WEAPON_BZGAS","WEAPON_SMOKEGRENADE","WEAPON_MOLOTOV","WEAPON_FIREEXTINGUISHER","WEAPON_PETROLCAN","WEAPON_SNOWBALL","WEAPON_FLARE","WEAPON_BALL"]
 
 //###################\\
 // Menu Definitions
 //###################\\
-ForceMenu.CreateMenu('revolution', 'Revolution.js', 'Options')
+ForceMenu.CreateMenu('revolution', 'Revolution Menu', 'Options')
 ForceMenu.CreateSubMenu('closeMenu', 'revolution', 'Are you sure?')
 ForceMenu.CreateSubMenu('selfMenu', 'revolution', 'You are so precious!')
+ForceMenu.CreateSubMenu('vMenu', 'revolution', 'PDM')
+ForceMenu.CreateSubMenu('wMenu', 'revolution', 'You like guns?!')
 ForceMenu.CreateSubMenu('onlinePlayers', 'revolution', 'Look at those!?')
 ForceMenu.CreateSubMenu('allPlayers', 'revolution', 'Seems its fuck time ? ')
 ForceMenu.CreateSubMenu('playerSelected', 'revolution', 'Seems its fuck time ? ')
+ForceMenu.CreateSubMenu('trollMenu', 'revolution', 'BRUH')
 
 //###################\\
 // Menu Thread
@@ -75,12 +99,15 @@ setTick(async () => {
   // Ordinary
   var player          = PlayerPedId()
   var lastcoords      = null
-  var SelectedPlayer  = null
   //////////////////////////
 
   // Menu Drawing
   if(ForceMenu.IsMenuOpened('revolution')) {
     if(ForceMenu.MenuButton('Self Options', 'selfMenu')) {
+      
+    } else if(ForceMenu.MenuButton('Weapon Menu', 'wMenu')) {
+
+    } else if(ForceMenu.MenuButton('Vehicle Menu', 'vMenu')) {
 
     } else if(ForceMenu.MenuButton('Online Players', 'onlinePlayers')) {
 
@@ -98,6 +125,7 @@ setTick(async () => {
     //###################\\
     if(ForceMenu.Button('Yes')) {
       ForceMenu.CloseMenu()
+      ForceMenu.EndMenu()
     }
     //###################\\
     // Cancel
@@ -182,6 +210,100 @@ setTick(async () => {
       console.log("Noclip "+Noclip);
     }
   }
+  else if (ForceMenu.IsMenuOpened('vMenu')) {
+    //###################\\
+    // Repair Eng
+    //###################\\
+    if(ForceMenu.Button('Repair Engine')) {
+      SetVehicleEngineHealth(GetVehiclePedIsUsing(PlayerPedId(-1)), 1000)
+    }
+    //###################\\
+    // Repair Vehicle
+    //###################\\
+    if(ForceMenu.Button('Repair Vehicle')) {
+      SetVehicleFixed(GetVehiclePedIsUsing(PlayerPedId(-1), false))
+      SetVehicleDirtLevel(GetVehiclePedIsUsing(PlayerPedId(-1), false), 0.0)
+      SetVehicleLights(GetVehiclePedIsUsing(PlayerPedId(-1), false), 0)
+      SetVehicleBurnout(GetVehiclePedIsUsing(PlayerPedId(-1), false), false)
+      SetVehicleUndriveable(GetVehiclePedIsUsing(PlayerPedId(-1), false))
+    }
+
+
+    //###################\\
+    // Max Out
+    //###################\\
+    if(ForceMenu.Button('Max Tuning')) {
+      SetVehicleModKit(GetVehiclePedIsUsing(PlayerPedId(-1), false), 0)
+      SetVehicleWheelType(GetVehiclePedIsUsing(PlayerPedId(-1), false), 7)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 0, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 0) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 1, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 1) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 2, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 2) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 3, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 3) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 4, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 4) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 5, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 5) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 6, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 6) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 7, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 7) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 8, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 8) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 9, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 9) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 10, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 10) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 11, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 11) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 12, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 12) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 13, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 13) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 14, 16, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 15, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 15) - 2, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 16, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 16) - 1, false)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 17, true)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 18, true)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 19, true)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 20, true)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 21, true)
+      ToggleVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 22, true)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 23, 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 24, 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 25, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 25) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 27, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 27) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 28, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 28) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 30, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 30) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 33, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 33) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 34, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 34) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 35, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 35) - 1, false)
+      SetVehicleMod(GetVehiclePedIsUsing(PlayerPedId(-1), false), 38, GetNumVehicleMods(GetVehiclePedIsUsing(PlayerPedId(-1), false), 38) - 1, true)
+      SetVehicleWindowTint(GetVehiclePedIsUsing(PlayerPedId(-1), false), 1)
+      SetVehicleTyresCanBurst(GetVehiclePedIsUsing(PlayerPedId(-1), false), false)
+      SetVehicleNeonLightEnabled(GetVehiclePedIsUsing(PlayerPedId(-1)), 0, true)
+      SetVehicleNeonLightEnabled(GetVehiclePedIsUsing(PlayerPedId(-1)), 1, true)
+      SetVehicleNeonLightEnabled(GetVehiclePedIsUsing(PlayerPedId(-1)), 2, true)
+      SetVehicleNeonLightEnabled(GetVehiclePedIsUsing(PlayerPedId(-1)), 3, true)
+      SetVehicleNeonLightsColour(GetVehiclePedIsUsing(PlayerPedId(-1)), 222, 222, 255)
+    }
+
+    //###################\\
+    // Clean Car
+    //###################\\
+    if(ForceMenu.Button('Clean Vehicle')) {
+      SetVehicleDirtLevel(GetVehiclePedIsUsing(PlayerPedId(-1), false), 1.0)
+    }
+
+
+    //###################\\
+    // Dirty Car
+    //###################\\
+    if(ForceMenu.Button('Dirty Vehicle')) {
+      SetVehicleDirtLevel(GetVehiclePedIsUsing(PlayerPedId(-1), false), 15.0)
+    }
+
+    /*
+    //###################\\
+    // Speed Demon
+    //###################\\
+    if(ForceMenu.CheckBox('Super Grip', superGrip, false)) {
+      superGrip = !superGrip
+      console.log("Super Grip "+superGrip)
+    }
+    */
+
+  }
+
   //###################\\
   // Online Players
   //###################\\
@@ -207,6 +329,455 @@ setTick(async () => {
   // All Players
   //###################\\
   else if (ForceMenu.IsMenuOpened('allPlayers')) {
+    if(ForceMenu.Button('Chicken Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_hen"
+          var wep = "WEAPON_PISTOL"
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Chimp Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_chimp"
+          var wep = "weapon_hammer"
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Lion Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_mtlion"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Seagull Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_seagull"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Pig Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_pig"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Rat Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_rat"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Stingray Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_stingray"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+    if(ForceMenu.Button('Zombie Army')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "u_m_y_zombie_01"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+
+
+    if(ForceMenu.Button('Zoo Attack')) {
+        for (var i = 0; i < 256; i++) {
+
+          var pedname = "a_c_stingray"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+          var pedname = "a_c_pig"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+          var pedname = "a_c_rabbit_01"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+          var pedname = "a_c_retriever"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+          var pedname = "a_c_deer"
+          var wep = ""
+          for (var i = 0; i < 10; i++) {
+            var coords = GetEntityCoords(GetPlayerPed(i))
+            RequestModel(GetHashKey(pedname))
+            await Delay(50)
+            if(HasModelLoaded(GetHashKey(pedname))) {
+              var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+              NetworkRegisterEntityAsNetworked(ped)
+              if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                var netped = PedToNet(ped)
+                NetworkSetNetworkIdDynamic(netped, false)
+                SetNetworkIdCanMigrate(netped, true)
+                SetNetworkIdExistsOnAllMachines(netped, true)
+                await Delay(500)
+                NetToPed(netped)
+                GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+                SetEntityInvincible(ped, true)
+                SetPedCanSwitchWeapon(ped, true)
+                TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+              } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+                TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+              } else {
+                await Delay(0)
+              }
+            }
+          }
+
+        }
+    }
+  }
+
+  else if (ForceMenu.IsMenuOpened('wMenu')) {
+    /*
+    if(ForceMenu.Button('Get Weapon')) {
+      var wName = KeyboardInput("Enter Weapon Spawn Name", "", 100)
+      GiveWeaponToPed(GetPlayerPed(-1), wName, 9999, false, true)
+    }
+    //###################\\
+    // inf ammo
+    //###################\\
+
+    if (ForceMenu.CheckBox('infinite ammo', rapidFire, false)) {
+      infammo = !infammo
+      console.log("Infinite Ammo "+infammo)
+    }
+    //###################\\
+    // Rapid Fire
+    //###################\\
+    /*
+    if (ForceMenu.CheckBox('Rapid Fire', rapidFire, false)) {
+      rapidFire = !rapidFire
+      console.log("Rapid Fire "+rapidFire)
+    }
+
+
+    if (ForceMenu.CheckBox('No Recoil', norecoil, false)) {
+      norecoil = !norecoil
+      console.log("No Recoil "+norecoil)
+    }
+*/
 
   }
 
@@ -214,10 +785,210 @@ setTick(async () => {
   // Player Selected
   //###################\\
   else if (ForceMenu.IsMenuOpened('playerSelected')) {
+    if(SelectedPlayer !== null) {
+      if(ForceMenu.Button('Revive / Heal')) {
+        var medkitname = "PICKUP_HEALTH_STANDARD"
+        var medkit = GetHashKey(medkitname)
+        var coords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        var pickup = CreateAmbientPickup(medkit, coords[0], coords[1], coords[2] + 1.0, 1, 1, medkit, 1, 0)
+        SetPickupRegenerationTime(pickup, 60)
+        emitNet("esx_ambulancejob:revive", SelectedPlayer)
+      }
+      if(ForceMenu.Button('Give Armour')) {
+        var ped = GetPlayerPed(SelectedPlayer)
+        SetPedArmour(ped, 200)
+      }
+      if(ForceMenu.CheckBox('Spectate', Spectate, false)) {
+        Spectate = !Spectate
+        console.log("Spectate "+Spectate);
 
+        var playerPed = PlayerPedId(-1)
+        var targetPed = GetPlayerPed(player)
+
+        if (Spectate){
+          var targetcoords = GetEntityCoords(targetPed, false)
+
+          RequestCollisionAtCoord(targetcoords[0], targetcoords[1], targetcoords[2])
+          NetworkSetInSpectatorMode(true, targetPed)
+        }
+        else {
+          var targetcoords = GetEntityCoords(targetPed, false)
+
+          RequestCollisionAtCoord(targetcoords[0], targetcoords[1], targetcoords[2])
+          NetworkSetInSpectatorMode(false, targetPed)
+        }
+      }
+      if(ForceMenu.Button('Teleport to')) {
+        var entity = IsPedInAnyVehicle(PlayerPedId(-1), false) && GetVehiclePedIsUsing(PlayerPedId(-1)) || PlayerPedId(-1)
+        var targetcoords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        SetEntityCoords(entity, targetcoords[0], targetcoords[1], targetcoords[2], 0.0, 0.0, 0.0, false)
+      }
+      if(ForceMenu.Button('Freeze Player')) {
+        emitNet("OG_cuffs:cuffCheckNearest", SelectedPlayer)
+        emitNet("CheckHandcuff", SelectedPlayer)
+        emitNet("cuffServer", SelectedPlayer)
+        emitNet("cuffGranted", SelectedPlayer)
+        emitNet("police:cuffGranted", SelectedPlayer)
+        emitNet("esx_handcuffs:cuffing", SelectedPlayer)
+        emitNet("esx_policejob:handcuff", SelectedPlayer)
+      }
+      if(ForceMenu.Button('Give All Weapons')) {
+        var ped = GetPlayerPed(SelectedPlayer)
+        for (var i = 0; i < allWeapons.length; i++) {
+          GiveWeaponToPed(ped, GetHashKey(allWeapons[i]), 9999, false, false)
+        }
+      }
+      if(ForceMenu.Button('Remove All Weapons')) {
+        RemoveAllPedWeapons(SelectedPlayer, true)
+      }
+      if(ForceMenu.Button('Give Vehicle')) {
+        var ped = GetPlayerPed(SelectedPlayer)
+        var pedcoords = GetEntityCoords(ped)
+        var ModelName = KeyboardInput("Enter Vehicle Spawn Name", "", 100)
+        if (await ModelName && IsModelValid(await ModelName) && IsModelAVehicle(await ModelName)){
+           RequestModel(await ModelName)
+           while (!HasModelLoaded(await ModelName)){
+             await Delay(5)
+           }
+           var veh = CreateVehicle(GetHashKey(await ModelName), pedcoords[0] , pedcoords[1], pedcoords[2], GetEntityHeading(ped)+90, true, true)
+        }
+      }
+      if(ForceMenu.Button('Send to Jail')) {
+        var ReasonOfJail = KeyboardInput("Reason", "", 100)
+        emitNet("esx-qalle-jail:jailPlayer", SelectedPlayer, 5000, await ReasonOfJail)
+        emitNet("esx_jailer:sendToJail", SelectedPlayer, 45 * 60)
+        emitNet("esx_jail:sendToJail", SelectedPlayer, 45 * 60)
+        emitNet("js:jailuser", SelectedPlayer, 45 * 60, ReasonOfJail)
+      }
+      if(ForceMenu.Button('Evade from Jail')) {
+        var entity = IsPedInAnyVehicle(GetPlayerPed(SelectedPlayer), false) && GetVehiclePedIsUsing(GetPlayerPed(SelectedPlayer)) || GetPlayerPed(SelectedPlayer)
+        SetEntityCoords(entity, 500, 500, 175, 0.0, 0.0, 0.0, false)
+      }
+    }
   }
 
-  else if(IsControlJustReleased(0, 244)) { // M by default
+  //###################\\
+  // Troll Menu
+  //###################\\
+  else if (ForceMenu.IsMenuOpened('trollMenu')) {
+    if(ForceMenu.Button('Fake Chat Message')) {
+      var message = KeyboardInput("Enter message to send", "", 100)
+      var dude = GetPlayerName(SelectedPlayer)
+      if (await message){
+        emitNet("_chat:messageEntered", dude, "ComposerDevil", await message)
+      }
+    }
+    if(ForceMenu.Button('Kick From Vehicle')) {
+      ClearPedTasksImmediately(GetPlayerPed(SelectedPlayer))
+    }
+    if(ForceMenu.Button('Explode Vehicle')) {
+      if (IsPedInAnyVehicle(GetPlayerPed(SelectedPlayer), true)){
+        var coords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        AddExplosion(coords[0], coords[1], coords[2], 4, 1337.0, false, true, 0.0)
+      }
+    }
+    if(ForceMenu.Button('Spawn Swat AK')) {
+      var pedname = "s_m_y_swat_01"
+      var wep = "WEAPON_ASSAULTRIFLE"
+      for (var i = 0; i < 10; i++) {
+        var coords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        RequestModel(GetHashKey(pedname))
+        await Delay(50)
+        if(HasModelLoaded(GetHashKey(pedname))) {
+          var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+          NetworkRegisterEntityAsNetworked(ped)
+          if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            var netped = PedToNet(ped)
+            NetworkSetNetworkIdDynamic(netped, false)
+            SetNetworkIdCanMigrate(netped, true)
+            SetNetworkIdExistsOnAllMachines(netped, true)
+            await Delay(500)
+            NetToPed(netped)
+            GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+            SetEntityInvincible(ped, true)
+            SetPedCanSwitchWeapon(ped, true)
+            TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+          } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+          } else {
+            await Delay(0)
+          }
+        }
+      }
+    }
+    if(ForceMenu.Button('Crash Player ( Whale Attack )')) {
+      var pedname = "a_c_humpback"
+      var wep = "weapon_rpg"
+      for (var i = 0; i < 10; i++) {
+        var coords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        RequestModel(GetHashKey(pedname))
+        await Delay(50)
+        if(HasModelLoaded(GetHashKey(pedname))) {
+          var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+          NetworkRegisterEntityAsNetworked(ped)
+          if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            var netped = PedToNet(ped)
+            NetworkSetNetworkIdDynamic(netped, false)
+            SetNetworkIdCanMigrate(netped, true)
+            SetNetworkIdExistsOnAllMachines(netped, true)
+            await Delay(500)
+            NetToPed(netped)
+            GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+            SetEntityInvincible(ped, true)
+            SetPedCanSwitchWeapon(ped, true)
+            TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+          } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+          } else {
+            await Delay(0)
+          }
+        }
+      }
+    }
+    if(ForceMenu.Button('Hot RPG')) {
+      var pedname = "a_m_m_tranvest_01"
+      var wep = "weapon_rpg"
+      for (var i = 0; i < 10; i++) {
+        var coords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
+        RequestModel(GetHashKey(pedname))
+        await Delay(50)
+        if(HasModelLoaded(GetHashKey(pedname))) {
+          var ped = CreatePed(21, GetHashKey(pedname),coords[0] + i, coords[1] - i, coords[2], 0, true, true) && CreatePed(21, GetHashKey(pedname),coords[0] - i, coords[1] + i, coords[2], 0, true, true)
+          NetworkRegisterEntityAsNetworked(ped)
+          if(DoesEntityExist(ped) && !IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            var netped = PedToNet(ped)
+            NetworkSetNetworkIdDynamic(netped, false)
+            SetNetworkIdCanMigrate(netped, true)
+            SetNetworkIdExistsOnAllMachines(netped, true)
+            await Delay(500)
+            NetToPed(netped)
+            GiveWeaponToPed(ped,GetHashKey(wep), 9999, 1, 1)
+            SetEntityInvincible(ped, true)
+            SetPedCanSwitchWeapon(ped, true)
+            TaskCombatPed(ped, GetPlayerPed(SelectedPlayer), 0,16)
+          } else if(IsEntityDead(GetPlayerPed(SelectedPlayer))) {
+            TaskCombatHatedTargetsInArea(ped, coords.x,coords.y, coords.z, 500)
+          } else {
+            await Delay(0)
+          }
+        }
+      }
+    }
+    if(ForceMenu.Button('Banana Party')) {
+      var obj1 = CreateObject(-1207431159, 0, 0, 0, true, true, true)
+      var obj2 = CreateObject(GetHashKey("cargoplane"), 0, 0, 0, true, true, true)
+      var obj3 = CreateObject(GetHashKey("prop_beach_fire"), 0, 0, 0, true, true, true)
+      AttachEntityToEntity(obj1, GetPlayerPed(SelectedPlayer), GetPedBoneIndex(GetPlayerPed(SelectedPlayer), 57005), 0.4, 0, 0, 0, 270.0, 60.0, true, true, false, true, 1, true)
+      AttachEntityToEntity(obj2, GetPlayerPed(SelectedPlayer), GetPedBoneIndex(GetPlayerPed(SelectedPlayer), 57005), 0.4, 0, 0, 0, 270.0, 60.0, true, true, false, true, 1, true)
+      AttachEntityToEntity(obj3, GetPlayerPed(SelectedPlayer), GetPedBoneIndex(GetPlayerPed(SelectedPlayer), 57005), 0.4, 0, 0, 0, 270.0, 60.0, true, true, false, true, 1, true)
+    }
+    if(ForceMenu.Button('Explode')) {
+      AddExplosion(GetEntityCoords(GetPlayerPed(SelectedPlayer)), 5, 3000.0, true, false, 100000.0)
+      AddExplosion(GetEntityCoords(GetPlayerPed(SelectedPlayer)), 5, 3000.0, true, false, true)
+    }
+  }
+
+  else if(IsControlJustReleased(0, 20) ) { // M by default
     ForceMenu.OpenMenu('revolution')
   }
 })
@@ -262,6 +1033,145 @@ setTick(async () => {
       SetRunSprintMultiplierForPlayer(PlayerId(-1), 1.0)
       SetPedMoveRateOverride(GetPlayerPed(-1), 1.0)
     }
+
+/*
+    //###################\\
+    // Speed Demon / Super Grip
+    //###################\\
+    if(speedDemon) {
+      SetPedCanBeKnockedOffVehicle(PlayerPedId(-1))
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fMass", 15000000.0)) // mass on collison
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fInitialDragCoeff", 10.0)) //aerodynamics (less drag)
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fInitialDriveMaxFlatVel", 1000.0)) //vehicle top speed at redline 
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "FPercentSubmerged", 0.70)) //sink level
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fDriveBiasFront", 0.50)) //4WD 
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fTractionCurveMax", 4.5)) //tire grip
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fTractionCurveMin", 4.38)) //acceleration/braking grip
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fBrakeForce", 5.00)) //game's calculation of deceleration
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fEngineDamageMult", 0.50)) //game's calculation of damage to the engine, causing explosion or engine failure.
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "FCollisonDamgeMult", 0.50)) // calculation of damage to the vehicle by collision. 
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fSteeringLock", 65.00)) //calculation of the angle of the steer wheel will turn while at full turn
+      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fRollCentreHeightFront", 1.00)) //Larger Numbers = less rollovers.
+  }
+    //###################\\
+    // Inf Ammo
+    //###################\\
+    if(infammo) {
+      SetPedInfiniteAmmoClip(GetPlayerPed(-1), true)
+      PedSkipNextReloading(GetPlayerPed(-1))
+      SetPedShootRate(GetPlayerPed(-1), 1000)
+    }
+
+
+    //###################\\
+    // Rapid Fire
+    //###################\\
+    if(rapidfire) {
+      DisablePlayerFiring(PlayerPedId(), true)
+        var weapon = GetCurrentPedWeapon(PlayerPedId())
+        var wepent = GetCurrentPedWeaponEntityIndex(PlayerPedId())
+        var camDir = GetCamDirFromScreenCenter()
+        var camPos = GetGameplayCamCoord()
+        var launchPos = GetEntityCoords(wepent)
+        var targetPos = camPos + (camDir * 200.0)
+
+        ClearAreaOfProjectiles(launchPos, 0.0, 1)
+
+        ShootSingleBulletBetweenCoords(launchPos, targetPos, 5, 1, weapon, PlayerPedId(), true, true, 24000.0)
+        ShootSingleBulletBetweenCoords(launchPos, targetPos, 5, 1, weapon, PlayerPedId(), true, true, 24000.0)
+    }
+
+        // No Recoil
+    if(norecoil) {
+      var cI = [
+        '[453432689] = 1.0',
+        '[3219281620] = 1.0',
+        '[1593441988] = 1.0',
+        '[584646201] = 1.0',
+        '[2578377531] = 1.0',
+        '[324215364] = 1.0',
+        '[736523883] = 1.0',
+        '[2024373456] = 1.0',
+        '[4024951519] = 1.0',
+        '[3220176749] = 1.0',
+        '[961495388] = 1.0',
+        '[2210333304] = 1.0',
+        '[4208062921] = 1.0',
+        '[2937143193] = 1.0',
+        '[2634544996] = 1.0',
+        '[2144741730] = 1.0',
+        '[3686625920] = 1.0',
+        '[487013001] = 1.0',
+        '[1432025498] = 1.0',
+        '[2017895192] = 1.0',
+        '[3800352039] = 1.0',
+        '[2640438543] = 1.0',
+        '[911657153] = 1.0',
+        '[100416529] = 1.0',
+        '[205991906] = 1.0',
+        '[177293209] = 1.0',
+        '[856002082] = 1.0',
+        '[2726580491] = 1.0',
+        '[1305664598] = 1.0',
+        '[2982836145] = 1.0',
+        '[1752584910] = 1.0',
+        '[1119849093] = 1.0',
+        '[3218215474] = 1.0',
+        '[1627465347] = 1.0',
+        '[3231910285] = 1.0',
+        '[-1768145561] = 1.0',
+        '[3523564046] = 1.0',
+        '[2132975508] = 1.0',
+        '[-2066285827] = 1.0',
+        '[137902532] = 1.0',
+        '[2828843422] = 1.0',
+        '[984333226] = 1.0',
+        '[3342088282] = 1.0',
+        '[1785463520] = 1.0',
+        '[1672152130] = 0',
+        '[1198879012] = 1.0',
+        '[171789620] = 1.0',
+        '[3696079510] = 1.0',
+        '[1834241177] = 1.0',
+        '[3675956304] = 1.0',
+        '[3249783761] = 1.0',
+        '[-879347409] = 1.0',
+        '[4019527611] = 1.0',
+        '[1649403952] = 1.0',
+        '[317205821] = 1.0',
+        '[125959754] = 1.0',
+        '[3173288789] = 1.0'
+      ]
+      if ( (IsPedShooting(PlayerPedId(-1))) && !(IsPedDoingDriveby(PlayerPedId(-1))) ) {
+          var cJ = GetCurrentPedWeapon(PlayerPedId(-1))
+          var cAmmo = GetAmmoInClip(PlayerPedId(-1), cJ)
+          if ( (cI[cJ]) && ( (cI[cJ]) != 0) ) {
+              var tv = 0
+              if ( (GetFollowPedCamViewMode()) != 4 ) {
+                  do {
+                      Wait(0)
+                      var p = GetGameplayCamRelativePitch()
+                      SetGameplayCamRelativePitch(p + 0.0, 0.0)
+                      tv = tv + 0.0
+                  } while ( tv >= cI[cJ] )
+              } else {
+                  do {
+                      Wait(0)
+                      p = GetGameplayCamRelativePitch()
+                      if ( cI[cJ] > 0.0) {
+                          SetGameplayCamRelativePitch(p + 0.0, 0.0)
+                          tv = tv + 0.0
+                      } else {
+                          SetGameplayCamRelativePitch(p + 0.0, 0.0)
+                          tv = tv + 0.0
+                      }
+                    } while ( tv >= cI[cJ] )
+              }
+            }
+        }
+    }
+    */
+
 
     //###################\\
     // Noclip

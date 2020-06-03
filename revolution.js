@@ -116,6 +116,7 @@ ForceMenu.CreateSubMenu('wMenu', 'revolution', 'Weapon Menu')
 ForceMenu.CreateSubMenu('GSWP', 'wMenu', 'Give Single Weapon')
 ForceMenu.CreateSubMenu('onlinePlayers', 'revolution', 'Online Menu')
 ForceMenu.CreateSubMenu('advMenu', 'revolution', 'Advanced Menu')
+ForceMenu.CreateSubMenu('ESXMenu', 'advMenu', 'ESX Options')
 ForceMenu.CreateSubMenu('allPlayers', 'revolution', 'All Player Options')
 ForceMenu.CreateSubMenu('playerSelected', 'revolution', 'Selected Player Menu')
 ForceMenu.CreateSubMenu('trollMenu', 'revolution', 'Trololol')
@@ -412,6 +413,9 @@ setTick(async () => {
   // Advanced Menu
   //###################\\
   else if (ForceMenu.IsMenuOpened('advMenu')) {
+    if(ForceMenu.Button('ESX Menu')) {
+      ForceMenu.OpenMenu('ESXMenu')
+  } 
     if(ForceMenu.Button('Force 3rd Person')) {
       SetFollowVehicleCamViewMode(2)
       SetFollowPedCamViewMode(2)
@@ -434,6 +438,135 @@ setTick(async () => {
       ClearPedEnvDirt(PlayerPedId())
       ResetPedVisibleDamage(PlayerPedId())
     } 
+  }
+
+  //###################\\
+  // ESX Menu
+  //###################\\
+  else if (ForceMenu.IsMenuOpened('ESXMenu')) {
+    if(ForceMenu.Button('Garbage Job - 10K')) {
+      emitNet("esx_garbagejob:pay", 10000)
+    }
+    if(ForceMenu.Button('Fuel Delivery - 10K')) {
+      emitNet("esx_fueldelivery:pay", 10000)
+    }
+    if(ForceMenu.Button('Car Thief -  10K')) {
+      emitNet("esx_carthief:pay", 10000)
+    }
+    if(ForceMenu.Button('Dirty Job - 10K')) {
+      emitNet("esx_godirtyjob:pay", 10000)
+    }
+    if(ForceMenu.Button('DMV - 10K')) {
+      emitNet("esx_dmvschool:pay", -10000)
+    }
+    if(ForceMenu.Button('Ranger Job - 10K')) {
+      emitNet("esx_ranger:pay", 10000)
+    }
+    if(ForceMenu.Button('GoPostal Job - 10K')) {
+      emitNet("esx_gopostaljob:pay", 10000)
+    }
+    if(ForceMenu.Button('Taxi Job')) {
+      emitNet("esx_taxijob:success")
+    }
+    if(ForceMenu.Button('House Rob')) {
+      emitNet("houseRobberies:giveMoney")
+    }
+    if(ForceMenu.Button('Get Weed')) {
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+    }
+    if(ForceMenu.Button('Process Weed')) {
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+    }
+    if(ForceMenu.Button('Get Opium')) {
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+    }
+    if(ForceMenu.Button('Process Opium')) {
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')      
+    }
+    if(ForceMenu.Button('Get Coke')) {
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+    }
+    if(ForceMenu.Button('Process Coke')) {
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+    }
+    if(ForceMenu.Button('Get Meth')) {
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+    }
+    if(ForceMenu.Button('Process Meth')) {
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+    }
+    if(ForceMenu.Button('Sell Drugs')) {
+      emitNet("esx_drugs:startSellWeed")
+      emitNet('esx_illegal_drugs:startSellCoke')
+      emitNet('esx_illegal_drugs:startSellMeth')
+      emitNet('esx_illegal_drugs:startSellOpium')
+      emitNet("t1ger_drugs:sellDrugs")
+    }
+    if(ForceMenu.Button('Get Jewels')) {
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+    }
+    if(ForceMenu.Button('Items from House Robbery')) {
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+    }
+    if(ForceMenu.Button('Remove GSR')) {
+      emitNet("GSR:Remove")
+    }
+    if(ForceMenu.Button('Set Hunger')) {
+      emitNet('esx_status:set', 'hunger', 0)
+    }
+    if(ForceMenu.Button('Set Thirst')) {
+      emitNet('esx_status:set', 'thirst', 0)
+    }
+    if(ForceMenu.Button('Set Stress')) {
+      emitNet('esx_status:set', 'stress', 0)
+    }
+    if(ForceMenu.Button('Get All License')) {
+      emitNet("esx_dmvschool:addLicense", 'dmv')
+      emitNet("esx_dmvschool:addLicense", 'drive')
+      emitNet("esx_dmvschool:addLicense", 'drive_bike')
+      emitNet("esx_dmvschool:addLicense", 'drive_truck')
+    }
+    
   }
   //###################\\
   // All Players

@@ -36,6 +36,25 @@ function DrawTxt(text, x, y) {
   DrawText(x, y)
 }
 
+// Draw 3D Text
+function DrawText3D(x, y, z, text, r, g, b) {
+  SetDrawOrigin(x, y, z, 0)
+  SetTextFont(0)
+  SetTextProportional(0)
+  SetTextScale(0.0, 0.20)
+  SetTextColour(r, g, b, 255)
+  SetTextDropshadow(0, 0, 0, 0, 255)
+  SetTextEdge(2, 0, 0, 0, 150)
+  SetTextDropShadow()
+  SetTextOutline()
+  SetTextEntry("STRING")
+  SetTextCentre(1)
+  AddTextComponentString(text)
+  DrawText(0.0, 0.0)
+  ClearDrawOrigin()
+}
+
+
 // Input Mode
 function GetInputMode() {
   return IsInputDisabled(2) && "MouseAndKeyboard" || "GamePad"
@@ -57,21 +76,27 @@ async function KeyboardInput(TextEntry, ExampleText, MaxStringLength) {
 }
 
 //###################\\
-// On / Off
+// On / Off GLOBALS
 //###################\\
 var Visibility            = true
 var Godmode               = false
 var Superjump             = false
 var InfinityStamina       = false
 var ThermalVision         = false
+var NightVision           = false
 var FastRun               = false
 var Noclip                = false
+var nocollision           = false
+var sbelt                 = false
+var antirag               = false
+var demigod               = false
+var shandle               = false
+var epunch                = false
+var aman                  = false
+var trackplayer           = false 
+var rfire                 = false
 var SelectedPlayer        = null
 var Spectate              = false
-var rapidFire             = false
-var norecoil              = false
-var superGrip             = false
-var infammo               = false
 //###################\\
 // Settings
 //###################\\
@@ -79,19 +104,22 @@ var items = [ 'Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5' ]
 var currentItemIndex = 1
 var selectedItemIndex = 1
 var allWeapons=["WEAPON_KNIFE","WEAPON_KNUCKLE","WEAPON_NIGHTSTICK","WEAPON_HAMMER","WEAPON_BAT","WEAPON_GOLFCLUB","WEAPON_CROWBAR","WEAPON_BOTTLE","WEAPON_DAGGER","WEAPON_HATCHET","WEAPON_MACHETE","WEAPON_FLASHLIGHT","WEAPON_SWITCHBLADE","WEAPON_PISTOL","WEAPON_PISTOL_MK2","WEAPON_COMBATPISTOL","WEAPON_APPISTOL","WEAPON_PISTOL50","WEAPON_SNSPISTOL","WEAPON_HEAVYPISTOL","WEAPON_VINTAGEPISTOL","WEAPON_STUNGUN","WEAPON_FLAREGUN","WEAPON_MARKSMANPISTOL","WEAPON_REVOLVER","WEAPON_MICROSMG","WEAPON_SMG","WEAPON_SMG_MK2","WEAPON_ASSAULTSMG","WEAPON_MG","WEAPON_COMBATMG","WEAPON_COMBATMG_MK2","WEAPON_COMBATPDW","WEAPON_GUSENBERG","WEAPON_MACHINEPISTOL","WEAPON_ASSAULTRIFLE","WEAPON_ASSAULTRIFLE_MK2","WEAPON_CARBINERIFLE","WEAPON_CARBINERIFLE_MK2","WEAPON_ADVANCEDRIFLE","WEAPON_SPECIALCARBINE","WEAPON_BULLPUPRIFLE","WEAPON_COMPACTRIFLE","WEAPON_PUMPSHOTGUN","WEAPON_SAWNOFFSHOTGUN","WEAPON_BULLPUPSHOTGUN","WEAPON_ASSAULTSHOTGUN","WEAPON_MUSKET","WEAPON_HEAVYSHOTGUN","WEAPON_DBSHOTGUN","WEAPON_SNIPERRIFLE","WEAPON_HEAVYSNIPER","WEAPON_HEAVYSNIPER_MK2","WEAPON_MARKSMANRIFLE","WEAPON_GRENADELAUNCHER","WEAPON_GRENADELAUNCHER_SMOKE","WEAPON_RPG","WEAPON_STINGER","WEAPON_FIREWORK","WEAPON_HOMINGLAUNCHER","WEAPON_GRENADE","WEAPON_STICKYBOMB","WEAPON_PROXMINE","WEAPON_BZGAS","WEAPON_SMOKEGRENADE","WEAPON_MOLOTOV","WEAPON_FIREEXTINGUISHER","WEAPON_PETROLCAN","WEAPON_SNOWBALL","WEAPON_FLARE","WEAPON_BALL"]
-
+var allVehicles = ["Akuma", "Bati", "Sentinel", "Adder", "Entity2", "Dominator2"]
 //###################\\
 // Menu Definitions
 //###################\\
 ForceMenu.CreateMenu('revolution', 'Revolution Menu', 'Options')
 ForceMenu.CreateSubMenu('closeMenu', 'revolution', 'Are you sure?')
-ForceMenu.CreateSubMenu('selfMenu', 'revolution', 'You are so precious!')
+ForceMenu.CreateSubMenu('selfMenu', 'revolution', 'Self Menu')
 ForceMenu.CreateSubMenu('vMenu', 'revolution', 'PDM')
-ForceMenu.CreateSubMenu('wMenu', 'revolution', 'You like guns?!')
-ForceMenu.CreateSubMenu('onlinePlayers', 'revolution', 'Look at those!?')
-ForceMenu.CreateSubMenu('allPlayers', 'revolution', 'Seems its fuck time ? ')
-ForceMenu.CreateSubMenu('playerSelected', 'revolution', 'Seems its fuck time ? ')
-ForceMenu.CreateSubMenu('trollMenu', 'revolution', 'BRUH')
+ForceMenu.CreateSubMenu('wMenu', 'revolution', 'Weapon Menu')
+ForceMenu.CreateSubMenu('GSWP', 'wMenu', 'Give Single Weapon')
+ForceMenu.CreateSubMenu('onlinePlayers', 'revolution', 'Online Menu')
+ForceMenu.CreateSubMenu('advMenu', 'revolution', 'Advanced Menu')
+ForceMenu.CreateSubMenu('ESXMenu', 'advMenu', 'ESX Options')
+ForceMenu.CreateSubMenu('allPlayers', 'revolution', 'All Player Options')
+ForceMenu.CreateSubMenu('playerSelected', 'revolution', 'Selected Player Menu')
+ForceMenu.CreateSubMenu('trollMenu', 'revolution', 'Trololol')
 
 //###################\\
 // Menu Thread
@@ -112,6 +140,8 @@ setTick(async () => {
     } else if(ForceMenu.MenuButton('Vehicle Menu', 'vMenu')) {
 
     } else if(ForceMenu.MenuButton('Online Players', 'onlinePlayers')) {
+
+    } else if(ForceMenu.MenuButton('Advanced Menu', 'advMenu')) {
 
     } else if(ForceMenu.MenuButton('Exit', 'closeMenu')) {
 
@@ -146,6 +176,20 @@ setTick(async () => {
     if(ForceMenu.CheckBox('God Mode', Godmode, false)) {
       Godmode = !Godmode
       console.log("God Mode "+Godmode);
+    }
+    //###################\\
+    // Demigod
+    //###################\\
+    if(ForceMenu.CheckBox('Demigod', demigod, false)) {
+      demigod = !demigod
+      console.log("Demigod "+demigod);
+    }
+    //###################\\
+    // Anti Ragdoll
+    //###################\\
+    if(ForceMenu.CheckBox('Anti Ragdoll', antirag, false)) {
+      antirag = !antirag
+      console.log("Anti Ragdoll "+antirag);
     }
     //###################\\
     // Player Visibility
@@ -191,6 +235,27 @@ setTick(async () => {
       console.log("Thermal Vision "+ThermalVision);
     }
     //###################\\
+    // Night Vision
+    //###################\\
+    if(ForceMenu.CheckBox('Night Vision', NightVision, false)) {
+      NightVision = !NightVision
+      console.log("Night Vision "+NightVision);
+    }
+    //###################\\
+    // Explosive Punch
+    //###################\\
+    if(ForceMenu.CheckBox('Explosive Punch', epunch, false)) {
+      epunch = !epunch
+      console.log("Explosive Punch "+epunch);
+    }
+    //###################\\
+    // Aquaman
+    //###################\\
+    if(ForceMenu.CheckBox('Aquaman', aman, false)) {
+      aman = !aman
+      console.log("Explosive Punch "+aman);
+    }
+    //###################\\
     // Fast Run
     //###################\\
     if(ForceMenu.CheckBox('Fast Run', FastRun, false)) {
@@ -214,10 +279,19 @@ setTick(async () => {
   }
   else if (ForceMenu.IsMenuOpened('vMenu')) {
     //###################\\
+    // NoCollison
+    //###################\\
+    if(ForceMenu.CheckBox('No Collision', nocollision, false)) {
+      nocollision = !nocollision
+      console.log("No Collision "+nocollision);
+    }
+
+    //###################\\
     // Repair Eng
     //###################\\
     if(ForceMenu.Button('Repair Engine')) {
       SetVehicleEngineHealth(GetVehiclePedIsUsing(PlayerPedId(-1)), 1000)
+      SetVehicleEngineOn(GetVehiclePedIsUsing(PlayerPedId(-1)), true, true, true)
     }
     //###################\\
     // Repair Vehicle
@@ -294,15 +368,22 @@ setTick(async () => {
       SetVehicleDirtLevel(GetVehiclePedIsUsing(PlayerPedId(-1), false), 15.0)
     }
 
-    /*
     //###################\\
-    // Speed Demon
+    // Super Handling
     //###################\\
-    if(ForceMenu.CheckBox('Super Grip', superGrip, false)) {
-      superGrip = !superGrip
-      console.log("Super Grip "+superGrip)
+    if(ForceMenu.CheckBox('Super Handling', shandle, false)) {
+      shandle = !shandle
+      console.log("Super Handling "+shandle);
     }
-    */
+
+
+    //###################\\
+    // Seatbelt
+    //###################\\
+    if(ForceMenu.CheckBox('Seatbelt', sbelt, false)) {
+      sbelt = !sbelt
+      console.log("Seatbelt "+sbelt);
+    }
 
   }
 
@@ -326,6 +407,166 @@ setTick(async () => {
         }
       }
     }
+  }
+
+  //###################\\
+  // Advanced Menu
+  //###################\\
+  else if (ForceMenu.IsMenuOpened('advMenu')) {
+    if(ForceMenu.Button('ESX Menu')) {
+      ForceMenu.OpenMenu('ESXMenu')
+  } 
+    if(ForceMenu.Button('Force 3rd Person')) {
+      SetFollowVehicleCamViewMode(2)
+      SetFollowPedCamViewMode(2)
+    } 
+
+    if(ForceMenu.Button('Opt FPS')) {
+      ClearAllBrokenGlass()
+      ClearAllHelpMessages()
+      LeaderboardsReadClearAll()
+      ClearBrief()
+      ClearGpsFlags()
+      ClearPrints()
+      ClearSmallPrints()
+      ClearReplayStats()
+      LeaderboardsClearCacheData()
+      ClearFocus()
+      ClearHdArea()
+      ClearPedBloodDamage(PlayerPedId())
+      ClearPedWetness(PlayerPedId())
+      ClearPedEnvDirt(PlayerPedId())
+      ResetPedVisibleDamage(PlayerPedId())
+    } 
+  }
+
+  //###################\\
+  // ESX Menu
+  //###################\\
+  else if (ForceMenu.IsMenuOpened('ESXMenu')) {
+    if(ForceMenu.Button('Garbage Job - 10K')) {
+      emitNet("esx_garbagejob:pay", 10000)
+    }
+    if(ForceMenu.Button('Fuel Delivery - 10K')) {
+      emitNet("esx_fueldelivery:pay", 10000)
+    }
+    if(ForceMenu.Button('Car Thief -  10K')) {
+      emitNet("esx_carthief:pay", 10000)
+    }
+    if(ForceMenu.Button('Dirty Job - 10K')) {
+      emitNet("esx_godirtyjob:pay", 10000)
+    }
+    if(ForceMenu.Button('DMV - 10K')) {
+      emitNet("esx_dmvschool:pay", -10000)
+    }
+    if(ForceMenu.Button('Ranger Job - 10K')) {
+      emitNet("esx_ranger:pay", 10000)
+    }
+    if(ForceMenu.Button('GoPostal Job - 10K')) {
+      emitNet("esx_gopostaljob:pay", 10000)
+    }
+    if(ForceMenu.Button('Taxi Job')) {
+      emitNet("esx_taxijob:success")
+    }
+    if(ForceMenu.Button('House Rob')) {
+      emitNet("houseRobberies:giveMoney")
+    }
+    if(ForceMenu.Button('Get Weed')) {
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+      emitNet("esx_drugs:startHarvestWeed")
+    }
+    if(ForceMenu.Button('Process Weed')) {
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+      emitNet('esx_drugs:processCannabis')
+    }
+    if(ForceMenu.Button('Get Opium')) {
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+      emitNet('esx_drugs:startHarvestOpium')
+    }
+    if(ForceMenu.Button('Process Opium')) {
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')
+      emitNet('esx_drugs:startTransformOpium')      
+    }
+    if(ForceMenu.Button('Get Coke')) {
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+      emitNet('esx_drugs:startHarvestCoke')
+    }
+    if(ForceMenu.Button('Process Coke')) {
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+      emitNet('esx_drugs:startTransformCoke')
+    }
+    if(ForceMenu.Button('Get Meth')) {
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+      emitNet('esx_drugs:startHarvestMeth')
+    }
+    if(ForceMenu.Button('Process Meth')) {
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+      emitNet('esx_drugs:startTransformMeth')
+    }
+    if(ForceMenu.Button('Sell Drugs')) {
+      emitNet("esx_drugs:startSellWeed")
+      emitNet('esx_illegal_drugs:startSellCoke')
+      emitNet('esx_illegal_drugs:startSellMeth')
+      emitNet('esx_illegal_drugs:startSellOpium')
+      emitNet("t1ger_drugs:sellDrugs")
+    }
+    if(ForceMenu.Button('Get Jewels')) {
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+      emitNet("esx_vangelico_robbery:gioielli1")
+    }
+    if(ForceMenu.Button('Items from House Robbery')) {
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+      emitNet("houseRobberies:searchItem")
+    }
+    if(ForceMenu.Button('Remove GSR')) {
+      emitNet("GSR:Remove")
+    }
+    if(ForceMenu.Button('Set Hunger')) {
+      emitNet('esx_status:set', 'hunger', 0)
+    }
+    if(ForceMenu.Button('Set Thirst')) {
+      emitNet('esx_status:set', 'thirst', 0)
+    }
+    if(ForceMenu.Button('Set Stress')) {
+      emitNet('esx_status:set', 'stress', 0)
+    }
+    if(ForceMenu.Button('Get All License')) {
+      emitNet("esx_dmvschool:addLicense", 'dmv')
+      emitNet("esx_dmvschool:addLicense", 'drive')
+      emitNet("esx_dmvschool:addLicense", 'drive_bike')
+      emitNet("esx_dmvschool:addLicense", 'drive_truck')
+    }
+    
   }
   //###################\\
   // All Players
@@ -752,35 +993,25 @@ setTick(async () => {
   }
 
   else if (ForceMenu.IsMenuOpened('wMenu')) {
-    /*
-    if(ForceMenu.Button('Get Weapon')) {
-      var wName = KeyboardInput("Enter Weapon Spawn Name", "", 100)
-      GiveWeaponToPed(GetPlayerPed(-1), wName, 9999, false, true)
+    if (ForceMenu.Button('Give Single Weapon')) {
+      ForceMenu.OpenMenu('GSWP')
+    } 
+    if (ForceMenu.Button('Remove All Weapons')) {
+      RemoveAllPedWeapons(GetPlayerPed(-1), true)
     }
-    //###################\\
-    // inf ammo
-    //###################\\
-
-    if (ForceMenu.CheckBox('infinite ammo', rapidFire, false)) {
-      infammo = !infammo
-      console.log("Infinite Ammo "+infammo)
+    if(ForceMenu.CheckBox('Infinite Ammo', rfire, false)) {
+      rfire = !rfire
+      console.log("Infinite Ammo "+rfire);
     }
-    //###################\\
-    // Rapid Fire
-    //###################\\
-    /*
-    if (ForceMenu.CheckBox('Rapid Fire', rapidFire, false)) {
-      rapidFire = !rapidFire
-      console.log("Rapid Fire "+rapidFire)
+    
+  }
+
+  else if (ForceMenu.IsMenuOpened('GSWP')) {
+    for (var i = 0; i < allWeapons.length; i++) {
+      if (ForceMenu.Button(allWeapons[i])) {
+        GiveWeaponToPed(GetPlayerPed(SelectedPlayer), GetHashKey(allWeapons[i]), 1000, false, true)
+      }
     }
-
-
-    if (ForceMenu.CheckBox('No Recoil', norecoil, false)) {
-      norecoil = !norecoil
-      console.log("No Recoil "+norecoil)
-    }
-*/
-
   }
 
   //###################\\
@@ -798,7 +1029,7 @@ setTick(async () => {
       }
       if(ForceMenu.Button('Give Armour')) {
         var ped = GetPlayerPed(SelectedPlayer)
-        SetPedArmour(ped, 200)
+        SetPedArmour(ped, 100)
       }
       if(ForceMenu.CheckBox('Spectate', Spectate, false)) {
         Spectate = !Spectate
@@ -820,6 +1051,12 @@ setTick(async () => {
           NetworkSetInSpectatorMode(false, targetPed)
         }
       }
+      if(ForceMenu.CheckBox('Track Player', trackplayer, false)) {
+        trackplayer = !trackplayer
+        var TrackedPlayer = SelectedPlayer
+        console.log("Track Player "+trackplayer);
+      }
+
       if(ForceMenu.Button('Teleport to')) {
         var entity = IsPedInAnyVehicle(PlayerPedId(-1), false) && GetVehiclePedIsUsing(PlayerPedId(-1)) || PlayerPedId(-1)
         var targetcoords = GetEntityCoords(GetPlayerPed(SelectedPlayer))
@@ -990,7 +1227,7 @@ setTick(async () => {
     }
   }
 
-  else if(IsControlJustReleased(0, 20) ) { // M by default
+  else if(IsControlJustReleased(0, 20) ) { // Z by default
     ForceMenu.OpenMenu('revolution')
   }
 })
@@ -1026,6 +1263,11 @@ setTick(async () => {
     SetSeethrough(ThermalVision)
 
     //###################\\
+    // Night Vision
+    //###################\\
+    SetNightvision(NightVision)
+
+    //###################\\
     // Fast Run
     //###################\\
     if(FastRun) {
@@ -1036,143 +1278,84 @@ setTick(async () => {
       SetPedMoveRateOverride(GetPlayerPed(-1), 1.0)
     }
 
-/*
     //###################\\
-    // Speed Demon / Super Grip
+    // Anti Rag
     //###################\\
-    if(speedDemon) {
-      SetPedCanBeKnockedOffVehicle(PlayerPedId(-1))
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fMass", 15000000.0)) // mass on collison
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fInitialDragCoeff", 10.0)) //aerodynamics (less drag)
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fInitialDriveMaxFlatVel", 1000.0)) //vehicle top speed at redline 
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "FPercentSubmerged", 0.70)) //sink level
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fDriveBiasFront", 0.50)) //4WD 
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fTractionCurveMax", 4.5)) //tire grip
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fTractionCurveMin", 4.38)) //acceleration/braking grip
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fBrakeForce", 5.00)) //game's calculation of deceleration
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fEngineDamageMult", 0.50)) //game's calculation of damage to the engine, causing explosion or engine failure.
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "FCollisonDamgeMult", 0.50)) // calculation of damage to the vehicle by collision. 
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fSteeringLock", 65.00)) //calculation of the angle of the steer wheel will turn while at full turn
-      SetVehicleHandlingFloat(GetVehiclePedIsUsing(PlayerPedId(-1), "CHandlingData", "fRollCentreHeightFront", 1.00)) //Larger Numbers = less rollovers.
-  }
+    if(antirag) SetPedCanRagdoll(PlayerPedId(-1), false);
+
     //###################\\
-    // Inf Ammo
+    // Demi God
     //###################\\
-    if(infammo) {
+    if(demigod) SetEntityHealth(PlayerPedId(), 200);
+
+    //###################\\
+    // Explosive Punch
+    //###################\\
+    if(epunch) SetExplosiveMeleeThisFrame(PlayerId());
+
+    //###################\\
+    // Infinite Ammo / Rapid Fire
+    //###################\\
+    if(rfire) {
       SetPedInfiniteAmmoClip(GetPlayerPed(-1), true)
       PedSkipNextReloading(GetPlayerPed(-1))
-      SetPedShootRate(GetPlayerPed(-1), 1000)
+      SetPedShootRate(GetPlayerPed(-1), 1000);
     }
+
+    //###################\\
+    // Aquaman
+    //###################\\
+    if(aman) {
+      SetPedDiesInWater(PlayerId(-1), false)
+      SetEnableScuba(PlayerId(-1), true) 
+      SetPedMaxTimeUnderwater(PlayerId(-1), 999.9)
+    } else {
+      SetPedDiesInWater(PlayerId(-1), true)
+      SetEnableScuba(PlayerId(-1), false) 
+      SetPedMaxTimeUnderwater(PlayerId(-1), 1.0)
+    }
+
+    //###################\\
+    // Seatbelt
+    //###################\\
+    if(sbelt) SetPedCanBeKnockedOffVehicle(PlayerPedId(-1), 1); 
 
 
     //###################\\
-    // Rapid Fire
+    // Track Player
     //###################\\
-    if(rapidfire) {
-      DisablePlayerFiring(PlayerPedId(), true)
-        var weapon = GetCurrentPedWeapon(PlayerPedId())
-        var wepent = GetCurrentPedWeaponEntityIndex(PlayerPedId())
-        var camDir = GetCamDirFromScreenCenter()
-        var camPos = GetGameplayCamCoord()
-        var launchPos = GetEntityCoords(wepent)
-        var targetPos = camPos + (camDir * 200.0)
-
-        ClearAreaOfProjectiles(launchPos, 0.0, 1)
-
-        ShootSingleBulletBetweenCoords(launchPos, targetPos, 5, 1, weapon, PlayerPedId(), true, true, 24000.0)
-        ShootSingleBulletBetweenCoords(launchPos, targetPos, 5, 1, weapon, PlayerPedId(), true, true, 24000.0)
+    if(trackplayer) {
+      var coords = GetEntityCoords(GetPlayerPed(TrackedPlayer))
+      SetNewWaypoint(coords.x, coords.y)
+    } 
+    //###################\\
+    // Super Handling
+    //###################\\
+    
+    if(shandle) {
+      SetVehicleGravityAmount(GetVehiclePedIsIn(PlayerPedId(), false), 20.0)
+      SetHandlingInt(GetVehiclePedIsUsing(PlayerPedId()), CHandlingData, fTractionCurveMin, 1000000)
+    } else {
+      SetVehicleGravityAmount(GetVehiclePedIsIn(PlayerPedId(), false), 10.0)
     }
 
-        // No Recoil
-    if(norecoil) {
-      var cI = [
-        '[453432689] = 1.0',
-        '[3219281620] = 1.0',
-        '[1593441988] = 1.0',
-        '[584646201] = 1.0',
-        '[2578377531] = 1.0',
-        '[324215364] = 1.0',
-        '[736523883] = 1.0',
-        '[2024373456] = 1.0',
-        '[4024951519] = 1.0',
-        '[3220176749] = 1.0',
-        '[961495388] = 1.0',
-        '[2210333304] = 1.0',
-        '[4208062921] = 1.0',
-        '[2937143193] = 1.0',
-        '[2634544996] = 1.0',
-        '[2144741730] = 1.0',
-        '[3686625920] = 1.0',
-        '[487013001] = 1.0',
-        '[1432025498] = 1.0',
-        '[2017895192] = 1.0',
-        '[3800352039] = 1.0',
-        '[2640438543] = 1.0',
-        '[911657153] = 1.0',
-        '[100416529] = 1.0',
-        '[205991906] = 1.0',
-        '[177293209] = 1.0',
-        '[856002082] = 1.0',
-        '[2726580491] = 1.0',
-        '[1305664598] = 1.0',
-        '[2982836145] = 1.0',
-        '[1752584910] = 1.0',
-        '[1119849093] = 1.0',
-        '[3218215474] = 1.0',
-        '[1627465347] = 1.0',
-        '[3231910285] = 1.0',
-        '[-1768145561] = 1.0',
-        '[3523564046] = 1.0',
-        '[2132975508] = 1.0',
-        '[-2066285827] = 1.0',
-        '[137902532] = 1.0',
-        '[2828843422] = 1.0',
-        '[984333226] = 1.0',
-        '[3342088282] = 1.0',
-        '[1785463520] = 1.0',
-        '[1672152130] = 0',
-        '[1198879012] = 1.0',
-        '[171789620] = 1.0',
-        '[3696079510] = 1.0',
-        '[1834241177] = 1.0',
-        '[3675956304] = 1.0',
-        '[3249783761] = 1.0',
-        '[-879347409] = 1.0',
-        '[4019527611] = 1.0',
-        '[1649403952] = 1.0',
-        '[317205821] = 1.0',
-        '[125959754] = 1.0',
-        '[3173288789] = 1.0'
-      ]
-      if ( (IsPedShooting(PlayerPedId(-1))) && !(IsPedDoingDriveby(PlayerPedId(-1))) ) {
-          var cJ = GetCurrentPedWeapon(PlayerPedId(-1))
-          var cAmmo = GetAmmoInClip(PlayerPedId(-1), cJ)
-          if ( (cI[cJ]) && ( (cI[cJ]) != 0) ) {
-              var tv = 0
-              if ( (GetFollowPedCamViewMode()) != 4 ) {
-                  do {
-                      Wait(0)
-                      var p = GetGameplayCamRelativePitch()
-                      SetGameplayCamRelativePitch(p + 0.0, 0.0)
-                      tv = tv + 0.0
-                  } while ( tv >= cI[cJ] )
-              } else {
-                  do {
-                      Wait(0)
-                      p = GetGameplayCamRelativePitch()
-                      if ( cI[cJ] > 0.0) {
-                          SetGameplayCamRelativePitch(p + 0.0, 0.0)
-                          tv = tv + 0.0
-                      } else {
-                          SetGameplayCamRelativePitch(p + 0.0, 0.0)
-                          tv = tv + 0.0
-                      }
-                    } while ( tv >= cI[cJ] )
-              }
-            }
-        }
-    }
-    */
+    //###################\\
+    // No Collision for Vehicles
+    //###################\\
+    if(nocollision) {
+      var playerveh = GetVehiclePedIsIn(PlayerPedId(), false)
+      var pos = GetEntityCoords(PlayerPedId())
+      var pedveh = GetRandomVehicleInSphere(pos, 100.0, 0, 0)
+      for (pedveh in EnumerateVehicles()) {
+        SetEntityNoCollisionEntity(k, playerveh, true)
+      }
+      for (pedveh in EnumerateObjects()) {
+        SetEntityNoCollisionEntity(k, playerveh, true)
+      }
+      for (pedveh in EnumeratePeds()) {
+        SetEntityNoCollisionEntity(k, playerveh, true)
+      }
+    } 
 
 
     //###################\\
@@ -1183,8 +1366,6 @@ setTick(async () => {
       DrawTxt("NOCLIP ~g~ON", 0.70, 0.9)
       var currentSpeed = 2
       var noclipEntity = IsPedInAnyVehicle(PlayerPedId(-1), false) && GetVehiclePedIsUsing(PlayerPedId(-1)) || PlayerPedId(-1)
-      FreezeEntityPosition(PlayerPedId(-1), true)
-      SetEntityInvincible(PlayerPedId(-1), true)
 
       var newPos = GetEntityCoords(entity)
 
@@ -1229,8 +1410,6 @@ setTick(async () => {
       SetEntityCollision(noclipEntity, false, false)
       SetEntityCoordsNoOffset(noclipEntity, newPos[0], newPos[1], newPos[2], true, true, true)
 
-      FreezeEntityPosition(noclipEntity, false)
-      SetEntityInvincible(noclipEntity, false)
       SetEntityCollision(noclipEntity, true, true)
     }
 })
